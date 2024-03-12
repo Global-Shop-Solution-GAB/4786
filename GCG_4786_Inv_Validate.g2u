@@ -1,0 +1,91 @@
+Program.Sub.Preflight.Start
+
+Program.Sub.Preflight.End
+
+Program.Sub.Main.Start
+F.Intrinsic.Control.SetErrorHandler("Main_Err")
+F.Intrinsic.Control.ClearErrors
+V.Local.sError.Declare(String)
+
+V.Local..BulkDeclareString(sTemp, sConsupCon, sPurCon, sEstIssueUM)
+'Function.intrinsic.control.if(Variable.Caller.Switches,=,"N")
+
+' Hooks 10170 (save button), and 13290 (ok in options screen from inventory master)
+Function.Intrinsic.Control.If(V.Caller.Hook, =, 13290)
+	F.Intrinsic.String.Build("{0}:{1}:{2}",V.Passed.000068.Trim,V.Passed.000010.Trim,V.Passed.000036.Trim, V.Local.sTemp) 
+	V.Passed.Global.Set(V.Local.sTemp)
+Function.Intrinsic.Control.EndIf	
+
+Function.Intrinsic.Control.If(V.Caller.Hook, =, 10170)
+
+	Function.Intrinsic.Control.If(V.Passed.Global, =, "")
+		Function.Intrinsic.UI.Msgbox("Go to Options and check Conversions")
+		Variable.Passed.777777.Set(1)
+	Function.Intrinsic.Control.Else 
+		F.Intrinsic.String.Split(V.Passed.Global, ":", V.Local.sTemp)
+		V.Local.sConsupCon.Set(V.local.sTemp(0))
+		V.Local.sPurCon.Set(V.local.sTemp(1))
+		V.Local.sEstIssueUM.Set(V.local.sTemp(2))
+		'clear out global
+		V.Passed.Global.Set("")
+		
+		'UM vs Purch UM
+		Function.Intrinsic.Control.if(V.Passed.000014, <>, V.Passed.000023)
+			Function.Intrinsic.Control.If(V.Local.sPurCon, =, "", "OR", V.Local.sPurCon, =, ".00000")
+				Function.Intrinsic.UI.Msgbox("Purchase Conversion required")
+				Variable.Passed.777777.Set(1)
+			Function.Intrinsic.Control.EndIf
+		Function.Intrinsic.Control.EndIf
+			
+		'UM vs EST UM
+		Function.Intrinsic.Control.if(V.Local.sEstIssueUM, <>, V.Passed.000014)
+			Function.Intrinsic.Control.If(V.Local.sConsupCon, =, "", "OR", V.Local.sConsupCon, =, ".00000")
+				Function.Intrinsic.UI.Msgbox("Comsumption Conversion required")
+				Variable.Passed.777777.Set(1)
+			Function.Intrinsic.Control.EndIf
+		Function.Intrinsic.Control.EndIf
+			
+	Function.Intrinsic.Control.EndIf
+	
+	'Stock/Project
+	Function.Intrinsic.Control.If(V.Passed.000026, =, "")
+		Function.Intrinsic.UI.Msgbox("Stock/Project is required")
+		Variable.Passed.777777.Set(1)
+	Function.Intrinsic.Control.EndIf
+		
+	'lead time for Purch to Stock and Purch to Job
+	Function.Intrinsic.Control.If(V.Passed.000060, =, "Purch to Stock", "OR", V.Passed.000060, =, "Purch to Job")
+		Function.Intrinsic.Control.If(V.Passed.000021, =, "")
+			Function.Intrinsic.UI.Msgbox("Lead Time is required")
+			Variable.Passed.777777.Set(1)
+		Function.Intrinsic.Control.EndIf
+	Function.Intrinsic.Control.EndIf
+	
+	'location
+	Function.Intrinsic.Control.If(V.Passed.000009, =, "")
+		Function.Intrinsic.UI.Msgbox("Location is required")
+		Variable.Passed.777777.Set(1)
+	Function.Intrinsic.Control.EndIf
+		
+	'UM
+	Function.Intrinsic.Control.If(V.Passed.000014, =,"")
+		Function.Intrinsic.UI.Msgbox("UM is required")
+		Variable.Passed.777777.Set(1)
+	Function.Intrinsic.Control.EndIf
+		
+Function.Intrinsic.Control.EndIf
+
+Function.Intrinsic.Control.End
+
+F.Intrinsic.Control.ExitSub
+F.Intrinsic.Control.Label("Main_Err")
+F.Intrinsic.Control.If(V.Ambient.ErrorNumber,<>,0)
+	Function.Intrinsic.String.Concat("Project: GCG_4786_Inv_Validate.g2u",V.Ambient.Newline,V.Ambient.Newline,"Subroutine: ",V.Ambient.CurrentSubroutine,V.Ambient.NewLine,"Error Occurred ",V.Ambient.ErrorNumber," with description ",V.Ambient.ErrorDescription,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+Function.Intrinsic.Control.EndIf
+Program.Sub.Main.End
+
+Program.Sub.Comments.Start
+${$0$}$$}$DH1$}$10/3/2017 1:59:25 PM$}$False
+${$3$}$0$}$$}$0$}$-1$}$$}$12:00:00 AM$}$Checks values on inventory master before saving part
+Program.Sub.Comments.End
